@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Jogo da Memória</title>
+  <style>
+    /* Define estilo base do corpo da página */
+    body {
+      font-family: Arial, sans-serif;   /* Fonte legível */
+      text-align: center;               /* Centraliza conteúdo */
+      background-color: #f0f0f0;        /* Cor de fundo clara */
+      margin: 0;
+      padding: 20px;
+    }
+
+    /* Título principal */
+    h1 {
+      color: #333;                      /* Cor do texto */
+    }
+
+    /* Tabuleiro do jogo como uma grade (grid) de 4 colunas */
+    #tabuleiro {
+      display: grid;
+      grid-template-columns: repeat(4, 100px); /* 4 colunas de 100px */
+      gap: 10px;                      /* Espaço entre as cartas */
+      justify-content: center;        /* Centraliza no meio da tela */
+      margin-top: 20px;
+    }
+
+    /* Cada carta no jogo */
+    .carta {
+      width: 100px;                   /* Largura da carta */
+      height: 100px;                  /* Altura da carta */
+      background-color: #888;         /* Cor de fundo quando fechada */
+      color: white;                   /* Cor do texto (quando virada) */
+      font-size: 36px;                /* Tamanho da letra */
+      display: flex;                  /* Flexbox para centralizar conteúdo */
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;                /* Mãozinha ao passar o mouse */
+      border-radius: 8px;             /* Borda arredondada */
+      user-select: none;              /* Impede o texto de ser selecionado */
+    }
+
+    /* Estilo quando a carta está virada (mostra valor) */
+    .virada {
+      background-color: #4caf50;      /* Cor verde para cartas viradas */
+    }
+
+    /* Mensagem abaixo do tabuleiro */
+    #mensagem {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Título do jogo -->
+  <h1>Jogo da Memória</h1>
+
+  <!-- Área onde as cartas serão inseridas dinamicamente -->
+  <div id="tabuleiro"></div>
+
+  <!-- Mensagem de status (inicial e final do jogo) -->
+  <div id="mensagem">Encontre todos os pares!</div>
+
+  <script>
+    // Lista com os valores das cartas (6 pares duplicados)
+    const valores = ['A', 'B', 'C', 'D', 'E', 'F', 'A', 'B', 'C', 'D', 'E', 'F'];
+
+    // Embaralha os valores para que as cartas fiquem em posições aleatórias
+    valores.sort(() => 0.5 - Math.random());
+
+    // Referência ao tabuleiro (onde as cartas serão colocadas)
+    const tabuleiro = document.getElementById('tabuleiro');
+    const mensagem = document.getElementById('mensagem');
+
+    // Variáveis de controle
+    let primeiraCarta = null;    // Guarda a primeira carta clicada
+    let segundaCarta = null;     // Guarda a segunda carta clicada
+    let travado = false;         // Impede cliques enquanto verifica combinação
+    let paresEncontrados = 0;    // Contador de pares certos
+
+    // Laço que percorre todos os valores e cria as cartas dinamicamente
+    valores.forEach((valor, index) => {
+      const carta = document.createElement('div');     // Cria uma div para cada carta
+      carta.classList.add('carta');                    // Adiciona a classe CSS "carta"
+      carta.dataset.valor = valor;                     // Armazena o valor secreto da carta (ex: 'A')
+      carta.dataset.index = index;                     // Armazena o índice (evita clique duplo na mesma carta)
+      carta.addEventListener('click', virarCarta);     // Associa função ao clique
+      tabuleiro.appendChild(carta);                    // Adiciona a carta ao tabuleiro
+    });
+
+    // Função que lida com o clique em uma carta
+    function virarCarta(e) {
+      const carta = e.target; // Carta que foi clicada
+
+      // Impede clique se o jogo estiver travado (esperando desvirar)
+      if (travado) return;
+
+      // Impede que a mesma carta seja clicada duas vezes
+      if (carta.classList.contains('virada')) return;
+
+      // Mostra o valor da carta e aplica estilo de "virada"
+      carta.textContent = carta.dataset.valor;
+      carta.classList.add('virada');
+
+      // Se for a primeira carta da rodada
+      if (!primeiraCarta) {
+        primeiraCarta = carta; // Armazena a carta
+        return;                // Espera o segundo clique
+      }
+
+      // Segunda carta clicada
+      segundaCarta = carta;
+      travado = true; // Impede cliques enquanto verifica o par
+
+      // Se os valores são iguais (par correto)
+      if (primeiraCarta.dataset.valor === segundaCarta.dataset.valor) {
+        // Par encontrado: mantém as duas cartas viradas
+        primeiraCarta = null;
+        segundaCarta = null;
+        travado = false;
+        paresEncontrados++; // Incrementa contador de pares
+
+        // Se encontrou todos os pares
+        if (paresEncontrados === 6) {
+          mensagem.textContent = "Parabéns! Você encontrou todos os pares! 🎉";
+        }
+
+      } else {
+        // Não é par: espera 1 segundo e desvira as cartas
+        setTimeout(() => {
+          primeiraCarta.textContent = '';                    // Esconde valor da primeira carta
+          segundaCarta.textContent = '';                     // Esconde valor da segunda carta
+          primeiraCarta.classList.remove('virada');          // Remove estilo "virada"
+          segundaCarta.classList.remove('virada');           // Remove estilo "virada"
+          primeiraCarta = null;
+          segundaCarta = null;
+          travado = false;                                   // Libera cliques novamente
+        }, 1000); // Aguarda 1000ms (1 segundo)
+      }
+    }
+  </script>
+
+</body>
+</html>
